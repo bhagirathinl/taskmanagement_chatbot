@@ -1,0 +1,89 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: chatbot-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: chatbot_db
+      MYSQL_USER: chatbot_user
+      MYSQL_PASSWORD: chatbotpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db-init:/docker-entrypoint-initdb.d
+    networks:
+      - tasks_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer
+    container_name: db_adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    networks:
+      - tasks_net
+    depends_on:
+      mysql:
+        condition: service_healthy
+  
+  app:
+    build: ./app
+    container_name: tasks_app
+    restart: always
+    ports:
+      - "3000:3000"  # Changed to match actual app port
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - tasks_net
+    environment:
+      PORT: 3000  
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: chatbot_user
+      DB_PASSWORD: chatbotpass
+      DB_NAME: chatbot_db
+  
+  chatbot:
+    build: ./chatbot
+    container_name: chatbot_service
+    ports:
+      - "4000:4000"
+    restart: unless-stopped
+    environment:
+      PORT: 4000  # Added to override default 4500
+      API_BASE_URL: http://app:3500  # Changed to match app port
+      #OPENAI_API_KEY: your_openai_api_key_here
+    networks:
+      - tasks_net
+    depends_on:
+      - app
+
+  chatbot-ui:
+    build: ./chatbot-ui
+    container_name: chatbot_ui
+    restart: unless-stopped
+    ports:
+      - "4500:3000"  # Changed: map host 4500 to container 3000 (CRA default)
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3000
+      REACT_APP_CHATBOT_API_URL: http://localhost:4000
+    networks:
+      - tasks_net
+    depends_on:
+      - chatbot
+
+volumes:
+  db_data:
+
+networks:
+  tasks_net:
