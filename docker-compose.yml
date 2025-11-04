@@ -60,8 +60,9 @@ services:
     restart: unless-stopped
     environment:
       PORT: 4000  # Added to override default 4500
-      API_BASE_URL: http://app:3500  # Changed to match app port
-      #OPENAI_API_KEY: your_openai_api_key_here
+      API_BASE_URL: http://app:3000  # Changed to match app port
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      USE_AI_BULLETIN: true
     networks:
       - tasks_net
     depends_on:
