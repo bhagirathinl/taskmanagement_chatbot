@@ -1,0 +1,273 @@
+/* Avatar Component Styles - Modern 2D Animated Character */
+
+.avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.avatar-character {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  transition: transform 0.3s ease;
+}
+
+.avatar-character.speaking {
+  animation: gentle-bounce 1s ease-in-out infinite;
+}
+
+@keyframes gentle-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Avatar Head */
+.avatar-head {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar-head::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+}
+
+/* Face Container */
+.avatar-face {
+  width: 140px;
+  height: 140px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Eyes */
+.avatar-eyes {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.avatar-eye {
+  width: 24px;
+  height: 24px;
+  background: white;
+  border: 3px solid #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: blink 5s infinite;
+}
+
+@keyframes blink {
+  0%, 49%, 51%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.1);
+  }
+}
+
+.avatar-pupil {
+  width: 10px;
+  height: 10px;
+  background: #333;
+  border-radius: 50%;
+  animation: look-around 8s ease-in-out infinite;
+}
+
+@keyframes look-around {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(3px);
+  }
+  75% {
+    transform: translateX(-3px);
+  }
+}
+
+/* Mouth States */
+.avatar-mouth {
+  width: 60px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.mouth-closed {
+  width: 40px;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+}
+
+.mouth-half {
+  width: 30px;
+  height: 20px;
+  border: 3px solid #333;
+  border-top: none;
+  border-radius: 0 0 30px 30px;
+  background: #ff6b9d;
+}
+
+.mouth-open {
+  width: 40px;
+  height: 30px;
+  border: 3px solid #333;
+  border-top: none;
+  border-radius: 0 0 40px 40px;
+  background: #ff6b9d;
+  animation: mouth-open-pulse 0.15s ease;
+}
+
+@keyframes mouth-open-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Audio Waves */
+.audio-waves {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  height: 30px;
+}
+
+.wave {
+  width: 4px;
+  background: linear-gradient(to top, #667eea, #764ba2);
+  border-radius: 2px;
+  animation: wave-animation 0.8s ease-in-out infinite;
+}
+
+.wave:nth-child(1) {
+  animation-delay: 0s;
+  height: 15px;
+}
+
+.wave:nth-child(2) {
+  animation-delay: 0.2s;
+  height: 25px;
+}
+
+.wave:nth-child(3) {
+  animation-delay: 0.4s;
+  height: 15px;
+}
+
+@keyframes wave-animation {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.5);
+  }
+}
+
+/* Status Indicator */
+.avatar-status {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  background: #f7fafc;
+  border: 2px solid #e2e8f0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4a5568;
+  transition: all 0.3s ease;
+}
+
+.status-speaking {
+  color: #667eea;
+  animation: pulse-text 1s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.status-idle {
+  color: #718096;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .avatar-character {
+    width: 150px;
+    height: 150px;
+  }
+
+  .avatar-face {
+    width: 110px;
+    height: 110px;
+  }
+
+  .avatar-eyes {
+    gap: 1.5rem;
+  }
+
+  .avatar-eye {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Hover Effect */
+.avatar-character:hover {
+  transform: scale(1.05);
+  cursor: pointer;
+}
+
+.avatar-character.speaking:hover {
+  animation: gentle-bounce 0.5s ease-in-out infinite;
+}

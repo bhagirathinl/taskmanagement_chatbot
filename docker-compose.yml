@@ -32,13 +32,13 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-  
+
   app:
     build: ./app
     container_name: tasks_app
     restart: always
     ports:
-      - "3000:3000"  # Changed to match actual app port
+      - "3000:3000"
     depends_on:
       mysql:
         condition: service_healthy
@@ -51,7 +51,7 @@ services:
       DB_USER: chatbot_user
       DB_PASSWORD: chatbotpass
       DB_NAME: chatbot_db
-  
+
   chatbot:
     build: ./chatbot
     container_name: chatbot_service
@@ -59,10 +59,30 @@ services:
       - "4000:4000"
     restart: unless-stopped
     environment:
-      PORT: 4000  # Added to override default 4500
-      API_BASE_URL: http://app:3000  # Changed to match app port
+      # Basic Configuration
+      PORT: 4000
+      NODE_ENV: production
+      
+      # Tasks API Connection (FIXED: Changed from 3500 to 3000)
+      API_BASE_URL: http://app:3000
+      
+      # OpenAI Configuration
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      # Unit 1.5: AI Bulletin Generation (Optional)
+      # Set to 'true' to use AI-generated bulletins, 'false' for templates
       USE_AI_BULLETIN: true
+      
+      # Unit 2: Text-to-Speech Configuration
+      # Set to 'false' to disable TTS, 'true' to enable (default: true)
+      ENABLE_TTS: true
+      
+      # TTS Voice Options: alloy, echo, fable, onyx, nova (female), shimmer (female)
+      TTS_VOICE: nova
+    
+    # Unit 2: Mount public directory for audio files
+    volumes:
+      - ./chatbot/public:/app/public
+    
     networks:
       - tasks_net
     depends_on:
@@ -73,7 +93,7 @@ services:
     container_name: chatbot_ui
     restart: unless-stopped
     ports:
-      - "4500:3000"  # Changed: map host 4500 to container 3000 (CRA default)
+      - "4500:3000"
     environment:
       HOST: 0.0.0.0
       PORT: 3000

@@ -1,28 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
+import BulletinView from './components/BulletinView';
 import './App.css';
 
 function App() {
+  // Tab state
+  const [activeTab, setActiveTab] = useState('bulletin');
+
+  // Chat state
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sessionId] = useState(() => `session-${Date.now()}`);
-  
-  // ✅ Add ref for chat container
   const chatContainerRef = useRef(null);
-  const API_URL = process.env.REACT_APP_CHATBOT_API_URL;;
 
-  // ✅ Auto-scroll to bottom whenever chat history changes
+  const API_URL = process.env.REACT_APP_CHATBOT_API_URL || 'http://localhost:4000';
+
+  // Auto-scroll to bottom whenever chat history changes
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [chatHistory, loading]); // Trigger on chat updates or loading state
+  }, [chatHistory, loading]);
 
   const sendMessage = async () => {
     if (!message.trim()) return;
-    
     setLoading(true);
-    
+
     const userMessage = { role: 'user', content: message };
     setChatHistory(prev => [...prev, userMessage]);
     setMessage('');
@@ -33,12 +36,10 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, sessionId })
       });
-      
+
       const data = await res.json();
-      
       const assistantMessage = { role: 'assistant', content: data.reply };
       setChatHistory(prev => [...prev, assistantMessage]);
-      
     } catch (err) {
       console.error('Error sending message:', err);
       const errorMessage = { role: 'assistant', content: '⚠️ Failed to reach chatbot.' };
@@ -51,7 +52,7 @@ function App() {
   const clearChat = async () => {
     setChatHistory([]);
     try {
-      await fetch('http://localhost:4000/chat/clear', {
+      await fetch(`${API_URL}/chat/clear`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId })
@@ -70,51 +71,86 @@ function App() {
 
   return (
     <div className="App">
-      <h1>🧠 Project Management Assistant</h1>
-      
-      {/* ✅ Add ref to chat container */}
-      <div className="chat-container" ref={chatContainerRef}>
-        {chatHistory.length === 0 && (
-          <div className="empty-state">
-            💬 Start by asking about projects, tasks, or team members!
+      <header className="app-header">
+        <h1>🧠 AI Project Manager</h1>
+        
+        {/* Tab Navigation */}
+        <div className="tabs">
+          <button 
+            className={`tab ${activeTab === 'bulletin' ? 'active' : ''}`}
+            onClick={() => setActiveTab('bulletin')}
+          >
+            📰 Daily Bulletin
+          </button>
+          <button 
+            className={`tab ${activeTab === 'chat' ? 'active' : ''}`}
+            onClick={() => setActiveTab('chat')}
+          >
+            💬 Chat Assistant
+          </button>
+        </div>
+      </header>
+
+      <main className="app-content">
+        {/* Bulletin Tab */}
+        {activeTab === 'bulletin' && (
+          <div className="tab-content">
+            <BulletinView userId={1} />
           </div>
         )}
-        {chatHistory.map((msg, idx) => (
-          <div key={idx} className={`message ${msg.role}`}>
-            <strong>{msg.role === 'user' ? '👤 You' : '🤖 Assistant'}:</strong>
-            <pre>{msg.content}</pre>
-          </div>
-        ))}
-        {loading && (
-          <div className="message assistant loading">
-            <strong>🤖 Assistant:</strong>
-            <div className="typing-indicator">
-              <span></span>
-              <span></span>
-              <span></span>
+
+        {/* Chat Tab */}
+        {activeTab === 'chat' && (
+          <div className="tab-content">
+            <div className="chat-section">
+              <div className="chat-container" ref={chatContainerRef}>
+                {chatHistory.length === 0 && (
+                  <div className="empty-state">
+                    💬 Start by asking about projects, tasks, or team members!
+                  </div>
+                )}
+
+                {chatHistory.map((msg, idx) => (
+                  <div key={idx} className={`message ${msg.role}`}>
+                    <strong>{msg.role === 'user' ? '👤 You' : '🤖 Assistant'}:</strong>
+                    <pre>{msg.content}</pre>
+                  </div>
+                ))}
+
+                {loading && (
+                  <div className="message assistant loading">
+                    <strong>🤖 Assistant:</strong>
+                    <div className="typing-indicator">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="input-area">
+                <textarea
+                  rows={3}
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask me about projects, tasks, or team members..."
+                  disabled={loading}
+                />
+                <div className="button-group">
+                  <button onClick={sendMessage} disabled={loading || !message.trim()}>
+                    {loading ? '⏳ Thinking...' : '📤 Send'}
+                  </button>
+                  <button onClick={clearChat} className="clear-btn" disabled={loading}>
+                    🗑️ Clear
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
-      </div>
-
-      <div className="input-area">
-        <textarea
-          rows={3}
-          value={message}
-          onChange={e => setMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Ask me about projects, tasks, or team members..."
-          disabled={loading}
-        />
-        <div className="button-group">
-          <button onClick={sendMessage} disabled={loading || !message.trim()}>
-            {loading ? '⏳ Thinking...' : '📤 Send'}
-          </button>
-          <button onClick={clearChat} className="clear-btn" disabled={loading}>
-            🗑️ Clear
-          </button>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
