@@ -4,7 +4,7 @@ import './App.css';
 
 function App() {
   // Tab state
-  const [activeTab, setActiveTab] = useState('bulletin');
+  const [activeTab, setActiveTab] = useState('chat');
 
   // Chat state
   const [message, setMessage] = useState('');
@@ -77,17 +77,18 @@ function App() {
         {/* Tab Navigation */}
         <div className="tabs">
           <button 
-            className={`tab ${activeTab === 'bulletin' ? 'active' : ''}`}
-            onClick={() => setActiveTab('bulletin')}
-          >
-            📰 Daily Bulletin
-          </button>
-          <button 
             className={`tab ${activeTab === 'chat' ? 'active' : ''}`}
             onClick={() => setActiveTab('chat')}
           >
             💬 Chat Assistant
           </button>
+          <button 
+            className={`tab ${activeTab === 'bulletin' ? 'active' : ''}`}
+            onClick={() => setActiveTab('bulletin')}
+          >
+            📰 Daily Bulletin
+          </button>
+          
         </div>
       </header>
 
