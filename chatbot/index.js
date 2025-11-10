@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import { createServer } from 'http';
 import chatRoutes from './routes/chat.js';
 import voiceChatRoutes from './routes/voiceChat.js';
+import realtimeVoiceChatRoutes from './services/realtimeVoiceChat.js';
 import { initializeVoiceChatWebSocket } from './services/streamingVoiceChat.js';
 
 // ES6 module dirname equivalent
@@ -22,6 +23,8 @@ const PORT = process.env.PORT || 4000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+// Parse raw SDP payloads for realtime voice chat
+app.use(express.text({ type: ["application/sdp", "text/plain"] }));
 
 // Serve static audio files
 const audioPath = path.join(__dirname, 'public', 'audio');
@@ -31,6 +34,7 @@ console.log(`🔊 Serving audio files from: ${audioPath}`);
 // Routes
 app.use('/chat', chatRoutes);
 app.use('/voice-chat', voiceChatRoutes);
+app.use('/realtime-voice', realtimeVoiceChatRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -64,6 +68,8 @@ app.get('/', (req, res) => {
       'POST /chat/clear': 'Clear conversation memory',
       'POST /voice-chat': 'Send voice message (audio file)',
       'POST /voice-chat/clear': 'Clear voice chat memory',
+      'POST /realtime-voice/session': 'Create realtime voice session (WebRTC)',
+      'POST /realtime-voice/execute-tool': 'Execute tool call from realtime session',
       'GET /audio/:filename': 'Get audio file',
       'GET /health': 'Health check'
     },
@@ -94,6 +100,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Chatbot service running on port ${PORT}`);
   console.log(`📝 Chat endpoint: http://localhost:${PORT}/chat`);
   console.log(`🎤 Voice Chat WebSocket: ws://localhost:${PORT}/ws/voice-chat`);
+  console.log(`🎙️  Realtime Voice endpoint: http://localhost:${PORT}/realtime-voice`);
   console.log(`🔊 Audio endpoint: http://localhost:${PORT}/audio`);
   console.log(`❤️  Health check: http://localhost:${PORT}/health`);
 
@@ -101,6 +108,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('\n🎯 Features:');
   console.log(`   Text Chat: ✅ Enabled`);
   console.log(`   Streaming Voice Chat: ✅ Enabled (WebSocket)`);
+  console.log(`   Realtime Voice Chat: ✅ Enabled (OpenAI Realtime API)`);
   console.log(`   Text-to-Speech: ${process.env.ENABLE_TTS !== 'false' ? '✅ Enabled' : '❌ Disabled'}`);
   if (process.env.ENABLE_TTS !== 'false') {
     console.log(`   Voice: ${process.env.TTS_VOICE || 'nova'}`);
