@@ -1,0 +1,22 @@
+/* Video Display Container */
+.video-container {
+  position: relative;
+  background: #000;
+  border-radius: 16px;
+  overflow: hidden;
+  height: 70%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .video-container {
+    height: 65%;
+  }
+}
+
+@media (max-width: 480px) {
+  .video-container {
+    height: 60%;
+  }
+}

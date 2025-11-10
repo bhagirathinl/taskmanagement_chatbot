@@ -98,6 +98,23 @@ services:
     depends_on:
       - chatbot
 
+  avatar-ui:
+    build: ./avatar-ui
+    container_name: avatar_ui
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5173
+      VITE_TASK_API_BASE_URL: http://localhost:3000
+    env_file:
+      - ./avatar-ui/.env
+    networks:
+      - tasks_net
+    depends_on:
+      - app
+
 volumes:
   db_data:
 
