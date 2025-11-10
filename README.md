@@ -25,19 +25,22 @@ This project is a comprehensive project management system with an AI chatbot int
 
 - **Tasks API** - RESTful API for managing projects, tasks, and users
 - **AI Chatbot** - LangChain-powered agent that interacts with the Tasks API
-- **Chatbot UI** - React-based web interface for chatting with the assistant
+- **Chatbot UI** - React-based web interface with multiple interaction modes
+- **Avatar UI** - Akool streaming avatar for visual AI interaction
 - **MySQL Database** - Stores all project, task, and user data
 - **Adminer** - Web-based database management interface
 
 ## ✨ Features
 
 - 🤖 **Natural Language Interface** - Ask questions in plain English
+- 🎭 **Multiple Interaction Modes** - Text chat, voice chat, realtime voice, and streaming avatar
 - 📊 **Project Management** - Track projects, tasks, and deadlines
 - 👥 **Team Management** - Monitor team workload and assignments
 - 📈 **Analytics Dashboard** - Get insights on project progress
 - 🔄 **Real-time Updates** - Modify tasks and projects through chat
 - 💾 **Conversation Memory** - Maintains context throughout the session
-- 🎨 **Modern UI** - Clean, responsive React interface
+- 🎤 **Voice-Powered Interaction** - Speech-to-speech communication with AI
+- 🎨 **Modern UI** - Clean, responsive React interface with tab navigation
 
 ### Example Queries
 
@@ -53,15 +56,20 @@ This project is a comprehensive project management system with an AI chatbot int
 ## 🏗️ Architecture
 
 ```
-┌─────────────────┐
-│   Chatbot UI    │ (React - Port 4500)
-│   (Frontend)    │
+┌─────────────────┐      ┌─────────────────┐
+│   Chatbot UI    │◄────►│   Avatar UI     │
+│  (React - 4500) │      │   (Vite - 5173) │
+│  • Text Chat    │      │  Akool Streaming│
+│  • Voice Chat   │      │   Avatar + AI   │
+│  • Realtime     │      └─────────────────┘
+│  • Avatar Tab   │
 └────────┬────────┘
          │
          ▼
 ┌─────────────────┐
 │  Chatbot API    │ (Node.js + LangChain - Port 4000)
-│  (AI Agent)     │
+│  (AI Agent)     │ • Text/Voice Chat
+│                 │ • OpenAI Realtime API
 └────────┬────────┘
          │
          ▼
@@ -84,6 +92,7 @@ Before you begin, ensure you have the following installed:
 - **Docker** (version 20.10 or higher)
 - **Docker Compose** (version 2.0 or higher)
 - **OpenAI API Key** - Get one from [OpenAI Platform](https://platform.openai.com/api-keys)
+- **Akool API Key** (Optional) - For streaming avatar functionality, get one from [Akool Platform](https://akool.com)
 
 ## 🚀 Quick Start
 
@@ -126,10 +135,11 @@ You should see all services with status "Up":
 
 ```
 NAME              STATUS
+avatar_ui         Up
 chatbot-mysql     Up (healthy)
 chatbot_service   Up
 chatbot_ui        Up
-db_adminer        Up
+db_adminer        Up (optional)
 tasks_app         Up
 ```
 
@@ -137,7 +147,12 @@ tasks_app         Up
 
 Open your browser and navigate to:
 
-- **Chatbot UI**: http://localhost:4500 (Main application)
+- **Chatbot UI**: http://localhost:4500 (Main application with 4 interaction modes)
+  - 💬 Text Chat - Traditional text-based conversation
+  - 🎤 Voice Chat - Voice input with text-to-speech response
+  - 🎙️ Realtime Voice - Real-time speech-to-speech interaction
+  - 🎭 Avatar - Visual AI avatar (requires Akool API key)
+- **Avatar UI**: http://localhost:5173/streaming/avatar (Direct avatar access)
 - **Tasks API**: http://localhost:3000 (API endpoints)
 - **Chatbot API**: http://localhost:4000 (AI agent)
 - **Adminer**: http://localhost:8080 (Database management)
@@ -145,7 +160,7 @@ Open your browser and navigate to:
 ## 📁 Project Structure
 
 ```
-marketing_chatbot/
+taskmanagement_chatbot/
 ├── app/                    # Tasks API (Backend)
 │   ├── index.js           # Express server with all API endpoints
 │   ├── Dockerfile         # Container configuration
@@ -159,19 +174,34 @@ marketing_chatbot/
 │   │   └── memory.js     # Conversation memory manager
 │   ├── routes/           # API routes
 │   │   └── chat.js       # Chat endpoint
-│   ├── services/         # External service integrations
+│   ├── services/         # Service integrations
+│   │   └── realtimeVoiceChat.js  # OpenAI Realtime API
 │   ├── index.js          # Server entry point
 │   ├── Dockerfile        # Container configuration
 │   └── package.json      # Node.js dependencies
 │
-├── chatbot-ui/           # React Frontend
+├── chatbot-ui/           # React Frontend (Main UI)
 │   ├── src/
-│   │   ├── App.js        # Main React component
+│   │   ├── App.js        # Main component with tabs
 │   │   ├── App.css       # Styles
+│   │   ├── components/   # React components
+│   │   │   ├── VoiceChat.jsx       # Voice chat component
+│   │   │   ├── RealtimeVoiceChat.jsx  # Realtime voice
+│   │   │   └── AvatarChat.jsx      # Avatar iframe wrapper
 │   │   └── index.js      # React entry point
 │   ├── public/           # Static assets
 │   ├── Dockerfile        # Container configuration
 │   └── package.json      # React dependencies
+│
+├── avatar-ui/            # Akool Streaming Avatar (TypeScript/Vite)
+│   ├── src/              # TypeScript source code
+│   │   ├── App.tsx       # Main avatar application
+│   │   ├── components/   # Avatar UI components
+│   │   ├── providers/    # Streaming providers (Agora, LiveKit, TRTC)
+│   │   └── services/     # API services
+│   ├── Dockerfile        # Container configuration
+│   ├── vite.config.ts    # Vite configuration
+│   └── package.json      # pnpm dependencies
 │
 ├── db-init/              # Database initialization
 │   └── init.sql          # Schema and sample data
@@ -201,11 +231,25 @@ See [chatbot/README.md](./chatbot/README.md) for agent architecture details.
 
 ### Chatbot UI (Port 4500)
 
-Modern web interface for interacting with the AI assistant.
+Modern web interface for interacting with the AI assistant. Features 4 interaction modes:
+- Text Chat: Traditional text-based conversation
+- Voice Chat: Voice input with TTS response
+- Realtime Voice: Speech-to-speech using OpenAI Realtime API
+- Avatar: Embedded Akool streaming avatar
 
 **Technologies**: React, Create React App
 
 See [chatbot-ui/README.md](./chatbot-ui/README.md) for UI documentation.
+
+### Avatar UI (Port 5173)
+
+Akool streaming avatar interface with visual AI interaction. Supports multiple streaming providers (Agora, LiveKit, TRTC) and integrates with the task management system.
+
+**Technologies**: TypeScript, React, Vite, Akool SDK
+
+**Configuration**: Requires Akool API key in `avatar-ui/.env`
+
+See [avatar-ui/README.md](./avatar-ui/README.md) and [avatar-ui/TASK_MANAGEMENT_INTEGRATION.md](./avatar-ui/TASK_MANAGEMENT_INTEGRATION.md) for details.
 
 ### MySQL Database (Port 3306)
 
@@ -233,14 +277,25 @@ Web-based database management tool.
 
 ### Required Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the `chatbot/` directory:
 
 ```env
-# OpenAI Configuration
+# OpenAI Configuration (Required for chatbot)
 OPENAI_API_KEY=sk-proj-your-api-key-here
 ```
 
-### Optional Variables
+### Optional Variables for Avatar
+
+Create/edit `avatar-ui/.env` to enable avatar functionality:
+
+```env
+# Akool Configuration (Optional - for avatar streaming)
+VITE_OPENAPI_TOKEN=your-akool-api-key-here
+VITE_AVATAR_ID=dvp_Tristan_cloth2_1080P
+VITE_VOICE_ID=Xb7hH8MSUJpSbSDYk0k2
+```
+
+### Other Optional Variables
 
 You can override default configurations in `docker-compose.yml`:
 
