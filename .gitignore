@@ -1,0 +1,39 @@
+# Environment variables and API keys
+.env
+*.env
+.env.local
+.env.development
+.env.production
+
+# Node modules
+node_modules/
+*/node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Docker volumes
+db_data/
+
+# Uploads and temp files
+uploads/
+*.tmp

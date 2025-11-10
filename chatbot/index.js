@@ -7,8 +7,10 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createServer } from 'http';
 import chatRoutes from './routes/chat.js';
-import bulletinRoutes from './routes/bulletin.js';
+import voiceChatRoutes from './routes/voiceChat.js';
+import { initializeVoiceChatWebSocket } from './services/streamingVoiceChat.js';
 
 // ES6 module dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
@@ -28,23 +30,20 @@ console.log(`🔊 Serving audio files from: ${audioPath}`);
 
 // Routes
 app.use('/chat', chatRoutes);
-app.use('/bulletin', bulletinRoutes);
+app.use('/voice-chat', voiceChatRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     service: 'chatbot',
     version: '2.0.0',
     features: {
       chat: 'enabled',
-      bulletin: 'enabled',
-      tts: process.env.ENABLE_TTS !== 'false' ? 'enabled' : 'disabled',
-      ai_bulletin: process.env.USE_AI_BULLETIN === 'true' ? 'enabled' : 'disabled'
+      tts: process.env.ENABLE_TTS !== 'false' ? 'enabled' : 'disabled'
     },
     endpoints: {
       chat: '/chat',
-      bulletin: '/bulletin',
       audio: '/audio',
       health: '/health'
     }
@@ -54,25 +53,21 @@ app.get('/health', (req, res) => {
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    message: 'Task Management Chatbot API with TTS',
+    message: 'Task Management Chatbot API',
     version: '2.0.0',
     services: {
       chat: 'AI-powered task management assistant',
-      bulletin: 'Personalized news bulletin generator',
-      tts: 'Text-to-speech audio generation'
+      voiceChat: 'Voice chat with speech-to-text and text-to-speech'
     },
     endpoints: {
-      'POST /chat': 'Send a chat message',
+      'POST /chat': 'Send a text chat message',
       'POST /chat/clear': 'Clear conversation memory',
-      'GET /bulletin/user/:userId': 'Get personalized bulletin (text)',
-      'GET /bulletin/user/:userId?voice=true': 'Get bulletin with audio',
-      'GET /bulletin/test': 'Test bulletin service',
-      'GET /bulletin/tts/stats': 'Get TTS statistics',
+      'POST /voice-chat': 'Send voice message (audio file)',
+      'POST /voice-chat/clear': 'Clear voice chat memory',
       'GET /audio/:filename': 'Get audio file',
       'GET /health': 'Health check'
     },
     features: {
-      aiGeneration: process.env.USE_AI_BULLETIN === 'true',
       textToSpeech: process.env.ENABLE_TTS !== 'false',
       voice: process.env.TTS_VOICE || 'nova'
     }
@@ -80,7 +75,7 @@ app.get('/', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   console.error('Error:', err);
   res.status(500).json({
     error: 'Internal server error',
@@ -88,17 +83,24 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Create HTTP server
+const server = createServer(app);
+
+// Initialize WebSocket for streaming voice chat
+initializeVoiceChatWebSocket(server);
+
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Chatbot service running on port ${PORT}`);
   console.log(`📝 Chat endpoint: http://localhost:${PORT}/chat`);
-  console.log(`📰 Bulletin endpoint: http://localhost:${PORT}/bulletin`);
+  console.log(`🎤 Voice Chat WebSocket: ws://localhost:${PORT}/ws/voice-chat`);
   console.log(`🔊 Audio endpoint: http://localhost:${PORT}/audio`);
   console.log(`❤️  Health check: http://localhost:${PORT}/health`);
-  
+
   // Log feature status
   console.log('\n🎯 Features:');
-  console.log(`   AI Bulletins: ${process.env.USE_AI_BULLETIN === 'true' ? '✅ Enabled' : '❌ Disabled'}`);
+  console.log(`   Text Chat: ✅ Enabled`);
+  console.log(`   Streaming Voice Chat: ✅ Enabled (WebSocket)`);
   console.log(`   Text-to-Speech: ${process.env.ENABLE_TTS !== 'false' ? '✅ Enabled' : '❌ Disabled'}`);
   if (process.env.ENABLE_TTS !== 'false') {
     console.log(`   Voice: ${process.env.TTS_VOICE || 'nova'}`);

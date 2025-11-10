@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import BulletinView from './components/BulletinView';
+import VoiceChat from './components/VoiceChat';
 import './App.css';
 
 function App() {
@@ -76,31 +76,23 @@ function App() {
         
         {/* Tab Navigation */}
         <div className="tabs">
-          <button 
+          <button
             className={`tab ${activeTab === 'chat' ? 'active' : ''}`}
             onClick={() => setActiveTab('chat')}
           >
-            💬 Chat Assistant
+            💬 Text Chat
           </button>
-          <button 
-            className={`tab ${activeTab === 'bulletin' ? 'active' : ''}`}
-            onClick={() => setActiveTab('bulletin')}
+          <button
+            className={`tab ${activeTab === 'voice' ? 'active' : ''}`}
+            onClick={() => setActiveTab('voice')}
           >
-            📰 Daily Bulletin
+            🎤 Voice Chat
           </button>
-          
         </div>
       </header>
 
       <main className="app-content">
-        {/* Bulletin Tab */}
-        {activeTab === 'bulletin' && (
-          <div className="tab-content">
-            <BulletinView userId={1} />
-          </div>
-        )}
-
-        {/* Chat Tab */}
+        {/* Text Chat Tab */}
         {activeTab === 'chat' && (
           <div className="tab-content">
             <div className="chat-section">
@@ -149,6 +141,13 @@ function App() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Voice Chat Tab */}
+        {activeTab === 'voice' && (
+          <div className="tab-content">
+            <VoiceChat />
           </div>
         )}
       </main>

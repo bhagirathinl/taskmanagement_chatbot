@@ -3,7 +3,7 @@ const OpenAI = require('openai');
 require('dotenv').config();
 
 const openai = new OpenAI({
-  apiKey: "sk-proj-your key here"
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 module.exports = openai;

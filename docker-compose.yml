@@ -58,31 +58,26 @@ services:
     ports:
       - "4000:4000"
     restart: unless-stopped
+    env_file:
+      - ./chatbot/.env
     environment:
       # Basic Configuration
       PORT: 4000
       NODE_ENV: production
-      
-      # Tasks API Connection (FIXED: Changed from 3500 to 3000)
+
+      # Tasks API Connection
       API_BASE_URL: http://app:3000
-      
-      # OpenAI Configuration
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      # Unit 1.5: AI Bulletin Generation (Optional)
-      # Set to 'true' to use AI-generated bulletins, 'false' for templates
-      USE_AI_BULLETIN: true
-      
-      # Unit 2: Text-to-Speech Configuration
-      # Set to 'false' to disable TTS, 'true' to enable (default: true)
+
+      # Text-to-Speech Configuration
       ENABLE_TTS: true
-      
+
       # TTS Voice Options: alloy, echo, fable, onyx, nova (female), shimmer (female)
       TTS_VOICE: nova
-    
-    # Unit 2: Mount public directory for audio files
+
+    # Mount public directory for audio files
     volumes:
       - ./chatbot/public:/app/public
-    
+
     networks:
       - tasks_net
     depends_on:
