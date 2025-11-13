@@ -1,0 +1,150 @@
+version: '3.8'
+
+services:
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/logs:/var/log/nginx
+    networks:
+      - tasks_net
+    depends_on:
+      - app
+      - chatbot
+      - chatbot-ui
+      - avatar-ui
+
+  mysql:
+    image: mysql:8.0
+    container_name: chatbot-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    # Don't expose port externally in production
+    expose:
+      - "3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db-init:/docker-entrypoint-initdb.d
+      - ./backups:/backups
+    networks:
+      - tasks_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Remove Adminer in production for security
+  # adminer:
+  #   Access via SSH tunnel if needed
+
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.prod
+    container_name: tasks_app
+    restart: always
+    expose:
+      - "3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - tasks_net
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  chatbot:
+    build:
+      context: ./chatbot
+      dockerfile: Dockerfile.prod
+    container_name: chatbot_service
+    expose:
+      - "4000"
+    restart: always
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      API_BASE_URL: http://app:3000
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ENABLE_TTS: ${ENABLE_TTS:-true}
+      TTS_VOICE: ${TTS_VOICE:-nova}
+    volumes:
+      - chatbot_audio:/app/public
+    networks:
+      - tasks_net
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  chatbot-ui:
+    build:
+      context: ./chatbot-ui
+      dockerfile: Dockerfile.prod
+    container_name: chatbot_ui
+    restart: always
+    expose:
+      - "3000"
+    environment:
+      NODE_ENV: production
+      REACT_APP_CHATBOT_API_URL: ${DOMAIN}/api/chatbot
+    networks:
+      - tasks_net
+    depends_on:
+      - chatbot
+
+  avatar-ui:
+    build:
+      context: ./avatar-ui
+      dockerfile: Dockerfile.prod
+    container_name: avatar_ui
+    restart: always
+    expose:
+      - "80"
+    environment:
+      NODE_ENV: production
+      VITE_OPENAPI_HOST: ${VITE_OPENAPI_HOST}
+      VITE_OPENAPI_TOKEN: ${VITE_OPENAPI_TOKEN}
+      VITE_SERVER_BASE: ${VITE_SERVER_BASE}
+      VITE_TASK_API_BASE_URL: ${DOMAIN}/api/tasks
+    networks:
+      - tasks_net
+    depends_on:
+      - app
+
+volumes:
+  db_data:
+    driver: local
+  chatbot_audio:
+    driver: local
+
+networks:
+  tasks_net:
+    driver: bridge

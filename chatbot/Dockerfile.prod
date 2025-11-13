@@ -1,0 +1,44 @@
+# Multi-stage build for production
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm ci --only=production
+
+# Copy application files
+COPY . .
+
+# Production stage
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
+# Copy from builder
+COPY --from=builder --chown=nodejs:nodejs /app .
+
+# Create directory for audio files
+RUN mkdir -p /app/public/audio && \
+    chown -R nodejs:nodejs /app/public
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port
+EXPOSE 4000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:4000/health || exit 1
+
+CMD ["node", "index.js"]
