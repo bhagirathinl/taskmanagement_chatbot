@@ -1,9 +1,16 @@
 require('dotenv').config();
 const express = require('express');
-
+const cors = require('cors');
 const mysql = require('mysql2/promise');
 const app = express();
 const port = process.env.PORT;
+
+// Enable CORS for all origins (or specify specific origins)
+app.use(cors({
+  origin: '*', // Allow all origins, or specify ['http://localhost:5173', 'http://localhost:4500']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json());
 
