@@ -45,9 +45,8 @@ const wrappedTools = toolsList.map((tool) => {
     description: toolDescription,
     schema: z.object(schemaShape),
     func: async (args) => {
-      console.log(`🔧 Executing tool: ${toolName} with args:`, args);
-      const result = await toolExecutor.executeToolCall({ 
-        function: { name: toolName, arguments: args } 
+      const result = await toolExecutor.executeToolCall({
+        function: { name: toolName, arguments: args }
       });
       return JSON.stringify(result.data);
     },
@@ -71,25 +70,39 @@ export async function getChatResponse(userMessage, conversationHistory = []) {
   try {
     const systemMessage = {
       role: "system",
-      content: `You are a helpful AI assistant with access to project management tools. 
+      content: `You are a helpful AI assistant for a project management system. You have access to a SQL database and can generate queries dynamically to answer user questions.
 
-IMPORTANT INSTRUCTIONS:
-- When asked about a project, you MUST gather ALL relevant information by calling multiple tools
-- First use getAllProjects or searchProjectByName to find the project ID
-- Then use getProjectSummary to get project details
-- Then use getUserTasks to get tasks for team members mentioned in the summary
-- ALWAYS call tools to get real data - NEVER make assumptions or provide generic information
-- If you need information from multiple sources, call multiple tools
-- Correlate and combine data from different tool calls to provide a complete answer
-- Remember context from previous messages in this conversation
-- If the user refers to "it", "that project", "those tasks", etc., use the context from previous messages
+DATABASE SCHEMA:
+================
+TABLE: users (id, name, email, role['client','employee'], created_at)
+TABLE: projects (id, name, client_id->users.id, status['pending','in_progress','completed','on_hold'], deadline, created_at)
+TABLE: tasks (id, project_id->projects.id, assigned_to->users.id, description, status['pending','in_progress','completed','on_hold'], due_date, updated_at)
 
-When presenting information:
-- Show actual task names and details from the data
-- Show actual team member names and their specific tasks
-- Include relevant dates, statuses, and assignments
-- Organize the information clearly with the actual data retrieved`
+YOUR TASK:
+1. Understand the user's request
+2. Generate an appropriate SQL query to fetch or modify the data
+3. Call the executeSqlQuery tool with your generated query
+4. Present the results in a clear, user-friendly format
+
+QUERY GUIDELINES:
+- Use JOINs to include human-readable names (user names, project names) instead of just IDs
+- For overdue tasks: WHERE due_date < CURDATE() AND status != 'completed'
+- Use aggregation (COUNT, SUM with CASE) for statistics
+- Always include helpful columns like names, dates, and statuses
+
+EXAMPLES:
+- "Show all projects" -> SELECT * FROM projects
+- "Who is working on Website Redesign?" -> SELECT u.name, t.description, t.status FROM tasks t JOIN users u ON t.assigned_to = u.id JOIN projects p ON t.project_id = p.id WHERE p.name LIKE '%Website Redesign%'
+- "What are overdue tasks?" -> SELECT t.*, u.name as assignee, p.name as project FROM tasks t LEFT JOIN users u ON t.assigned_to = u.id LEFT JOIN projects p ON t.project_id = p.id WHERE t.due_date < CURDATE() AND t.status != 'completed'
+
+IMPORTANT:
+- ALWAYS call executeSqlQuery to get real data - NEVER assume or make up data
+- Generate efficient queries that return all needed information
+- Remember conversation context for follow-up questions
+- Present results in a natural, conversational way
+- When users say "my projects", "my tasks", or similar possessive phrases, treat it as ALL projects/tasks - do NOT ask for user ID or email`
     };
+    console.log("🧾 System message prepared.", systemMessage);
 
     // ✅ Build messages array with full conversation history
     const messages = [
@@ -101,7 +114,7 @@ When presenting information:
       }
     ];
 
-    console.log("📨 Messages being sent to model:", messages.length);
+    console.log("📨 Messages being sent to model:", messages,messages.length);
 
     let iterations = 0;
     const maxIterations = 5;

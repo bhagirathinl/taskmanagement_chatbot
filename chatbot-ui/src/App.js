@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import VoiceChat from './components/VoiceChat';
 import RealtimeVoiceChat from './components/RealtimeVoiceChat';
-import AvatarChat from './components/AvatarChat';
+import SimpleAvatar from './components/SimpleAvatar';
 import './App.css';
 
 function App() {
@@ -85,12 +84,6 @@ function App() {
             💬 Text Chat
           </button>
           <button
-            className={`tab ${activeTab === 'voice' ? 'active' : ''}`}
-            onClick={() => setActiveTab('voice')}
-          >
-            🎤 Voice Chat
-          </button>
-          <button
             className={`tab ${activeTab === 'realtime' ? 'active' : ''}`}
             onClick={() => setActiveTab('realtime')}
           >
@@ -158,13 +151,6 @@ function App() {
           </div>
         )}
 
-        {/* Voice Chat Tab */}
-        {activeTab === 'voice' && (
-          <div className="tab-content">
-            <VoiceChat />
-          </div>
-        )}
-
         {/* Realtime Voice Chat Tab */}
         {activeTab === 'realtime' && (
           <div className="tab-content">
@@ -172,10 +158,10 @@ function App() {
           </div>
         )}
 
-        {/* Avatar Chat Tab */}
+        {/* Avatar Tab */}
         {activeTab === 'avatar' && (
           <div className="tab-content">
-            <AvatarChat />
+            <SimpleAvatar />
           </div>
         )}
       </main>

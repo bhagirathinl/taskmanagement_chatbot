@@ -35,6 +35,7 @@ function RealtimeVoiceChat() {
       dataChannelRef.current = dataChannel;
 
       dataChannel.addEventListener("message", (e) => {
+        console.log("Received data channel message:", e.data);
         handleServerMessage(JSON.parse(e.data));
       });
 

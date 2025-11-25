@@ -1,3 +1,6 @@
+# Development docker-compose with hot reload
+# Run with: docker-compose -f docker-compose.dev.yml up --build
+
 services:
   mysql:
     image: mysql:8.0
@@ -28,6 +31,9 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    volumes:
+      - ./app:/app
+      - /app/node_modules
     depends_on:
       mysql:
         condition: service_healthy
@@ -41,7 +47,7 @@ services:
       DB_PASSWORD: chatbotpass
       DB_NAME: chatbot_db
 
-  # AI Chatbot Backend
+  # AI Chatbot Backend (with nodemon for hot reload)
   chatbot:
     build: ./chatbot
     container_name: chatbot_service
@@ -52,18 +58,21 @@ services:
       - ./chatbot/.env
     environment:
       PORT: 4000
-      NODE_ENV: production
+      NODE_ENV: development
       API_BASE_URL: http://app:3000
       ENABLE_TTS: "true"
       TTS_VOICE: nova
     volumes:
+      - ./chatbot:/app
+      - /app/node_modules
       - ./chatbot/public:/app/public
+    command: npm run dev
     networks:
       - tasks_net
     depends_on:
       - app
 
-  # Chatbot UI (React)
+  # Chatbot UI (React with hot reload)
   chatbot-ui:
     build: ./chatbot-ui
     container_name: chatbot_ui
@@ -75,12 +84,17 @@ services:
       PORT: 3000
       REACT_APP_CHATBOT_API_URL: http://localhost:4000
       REACT_APP_AVATAR_UI_URL: http://localhost:5400
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ./chatbot-ui/src:/app/src
+      - ./chatbot-ui/public:/app/public
     networks:
       - tasks_net
     depends_on:
       - chatbot
 
-  # Simple Avatar UI - Backend
+  # Simple Avatar UI - Backend (with nodemon)
   simple-avatar-backend:
     build: ./simple-avatar-ui/backend
     container_name: simple_avatar_backend
@@ -93,12 +107,16 @@ services:
       PORT: 4700
       CHATBOT_API_URL: http://chatbot:4000
       CHATBOT_ENABLED: "true"
+    volumes:
+      - ./simple-avatar-ui/backend:/app
+      - /app/node_modules
+    command: npm run dev
     networks:
       - tasks_net
     depends_on:
       - chatbot
 
-  # Simple Avatar UI - Frontend
+  # Simple Avatar UI - Frontend (Vite with hot reload)
   simple-avatar-frontend:
     build: ./simple-avatar-ui/frontend
     container_name: simple_avatar_frontend
@@ -107,6 +125,9 @@ services:
       - "5400:5400"
     environment:
       VITE_BACKEND_URL: http://localhost:4700
+    volumes:
+      - ./simple-avatar-ui/frontend/src:/app/src
+      - ./simple-avatar-ui/frontend/public:/app/public
     networks:
       - tasks_net
     depends_on:

@@ -1,0 +1,164 @@
+version: '3.8'
+
+# AWS Free Tier Optimized Configuration
+# For t2.micro/t3.micro (1 vCPU, 1 GB RAM)
+# This runs essential services only to fit in free tier limits
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: chatbot-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    expose:
+      - "3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db-init:/docker-entrypoint-initdb.d
+    networks:
+      - tasks_net
+    # Memory optimization for MySQL
+    command: >
+      --max_connections=20
+      --innodb_buffer_pool_size=128M
+      --innodb_log_file_size=32M
+      --query_cache_size=0
+      --query_cache_type=0
+      --performance_schema=OFF
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: tasks_app
+    restart: always
+    expose:
+      - "3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - tasks_net
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Run either chatbot OR avatar-ui, not both (to save memory)
+  # Uncomment the one you want to use
+
+  # Option 1: Chatbot Service + UI
+  chatbot:
+    build:
+      context: ./chatbot
+      dockerfile: Dockerfile
+    container_name: chatbot_service
+    expose:
+      - "4000"
+    restart: always
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      API_BASE_URL: http://app:3000
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ENABLE_TTS: ${ENABLE_TTS:-false}  # Disable TTS to save memory
+      TTS_VOICE: ${TTS_VOICE:-nova}
+    volumes:
+      - chatbot_audio:/app/public
+    networks:
+      - tasks_net
+    depends_on:
+      - app
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  chatbot-ui:
+    build:
+      context: ./chatbot-ui
+      dockerfile: Dockerfile
+    container_name: chatbot_ui
+    restart: always
+    ports:
+      - "80:3000"  # Direct port mapping (no nginx to save memory)
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3000
+      REACT_APP_CHATBOT_API_URL: http://${DOMAIN:-localhost}:4000
+    networks:
+      - tasks_net
+    depends_on:
+      - chatbot
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # Option 2: Avatar UI (comment out chatbot services above if using this)
+  # avatar-ui:
+  #   build:
+  #     context: ./avatar-ui
+  #     dockerfile: Dockerfile
+  #   container_name: avatar_ui
+  #   restart: always
+  #   ports:
+  #     - "80:5173"
+  #   environment:
+  #     HOST: 0.0.0.0
+  #     PORT: 5173
+  #     VITE_OPENAPI_HOST: ${VITE_OPENAPI_HOST}
+  #     VITE_OPENAPI_TOKEN: ${VITE_OPENAPI_TOKEN}
+  #     VITE_SERVER_BASE: ${VITE_SERVER_BASE}
+  #     VITE_TASK_API_BASE_URL: http://${DOMAIN:-localhost}:3000
+  #   env_file:
+  #     - ./avatar-ui/.env
+  #   networks:
+  #     - tasks_net
+  #   depends_on:
+  #     - app
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 256M
+
+volumes:
+  db_data:
+    driver: local
+  chatbot_audio:
+    driver: local
+
+networks:
+  tasks_net:
+    driver: bridge

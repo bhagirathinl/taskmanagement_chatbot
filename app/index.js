@@ -509,6 +509,82 @@ app.put('/projects/:projectId', async (req, res) => {
   }
 });
 
+// ==================== DYNAMIC SQL ENDPOINT ====================
+
+// 🔧 Execute dynamic SQL query (for AI-generated queries)
+app.post('/sql/execute', async (req, res) => {
+  try {
+    const { query } = req.body;
+
+    if (!query) {
+      return res.status(400).json({ error: 'Query is required' });
+    }
+
+    // Normalize query for validation
+    const normalizedQuery = query.trim().toUpperCase();
+
+    // Allow SELECT, INSERT, UPDATE, DELETE
+    const allowedOperations = ['SELECT', 'INSERT', 'UPDATE', 'DELETE'];
+    const operation = allowedOperations.find(op => normalizedQuery.startsWith(op));
+
+    if (!operation) {
+      return res.status(403).json({
+        error: 'Only SELECT, INSERT, UPDATE, DELETE operations are allowed'
+      });
+    }
+
+    // Block dangerous operations
+    const dangerousPatterns = [
+      /DROP\s+/i,
+      /TRUNCATE\s+/i,
+      /ALTER\s+/i,
+      /CREATE\s+/i,
+      /GRANT\s+/i,
+      /REVOKE\s+/i,
+      /;\s*DROP/i,
+      /;\s*DELETE/i,
+      /;\s*UPDATE/i,
+      /--/,
+      /\/\*/
+    ];
+
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(query)) {
+        return res.status(403).json({
+          error: 'Query contains potentially dangerous operations'
+        });
+      }
+    }
+
+    console.log(`🔧 Executing dynamic SQL: ${query}`);
+
+    const [results] = await pool.query(query);
+
+    // For SELECT queries, return results directly
+    // For INSERT/UPDATE/DELETE, return affected rows info
+    if (operation === 'SELECT') {
+      res.json({
+        success: true,
+        data: results,
+        rowCount: results.length
+      });
+    } else {
+      res.json({
+        success: true,
+        affectedRows: results.affectedRows,
+        insertId: results.insertId || null,
+        message: `${operation} operation completed successfully`
+      });
+    }
+  } catch (err) {
+    console.error('SQL Execution Error:', err);
+    res.status(500).json({
+      error: 'Query execution failed',
+      details: err.message
+    });
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -536,4 +612,5 @@ app.listen(port, () => {
   console.log('  GET  /analytics/dashboard');
   console.log('  PUT  /tasks/:taskId');
   console.log('  PUT  /projects/:projectId');
+  console.log('  POST /sql/execute');
 });
