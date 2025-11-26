@@ -105,14 +105,12 @@ services:
     build:
       context: ./chatbot-ui
       dockerfile: Dockerfile
+      args:
+        REACT_APP_CHATBOT_API_URL: http://${DOMAIN:-localhost}:4000
     container_name: chatbot_ui
     restart: always
     ports:
-      - "80:3000"  # Direct port mapping (no nginx to save memory)
-    environment:
-      HOST: 0.0.0.0
-      PORT: 3000
-      REACT_APP_CHATBOT_API_URL: http://${DOMAIN:-localhost}:4000
+      - "80:3000"
     networks:
       - tasks_net
     depends_on:
@@ -120,7 +118,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 64M
 
   # Option 2: Simple Avatar UI (comment out chatbot services above if using this)
   # Uncomment both simple-avatar-backend and simple-avatar-frontend
