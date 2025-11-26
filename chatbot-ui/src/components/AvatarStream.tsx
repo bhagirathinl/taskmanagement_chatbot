@@ -229,8 +229,8 @@ export default function AvatarStream({ initialCredentials, initialSessionId, onE
       client.on(TRTC.EVENT.AUTOPLAY_FAILED, async () => {
         console.log('Autoplay failed, attempting to resume...');
         try {
-          await client.resumeVideo();
-          await client.resumeAudio();
+          await (client as any).resumeVideo();
+          await (client as any).resumeAudio();
           console.log('Playback resumed');
         } catch (e) {
           console.warn('Auto-resume failed:', e);
@@ -356,8 +356,8 @@ export default function AvatarStream({ initialCredentials, initialSessionId, onE
     const client = clientRef.current;
     if (client) {
       try {
-        await client.resumeVideo();
-        await client.resumeAudio();
+        await (client as any).resumeVideo();
+        await (client as any).resumeAudio();
         console.log('Playback resumed via click');
       } catch (e) {
         console.warn('Resume failed:', e);
