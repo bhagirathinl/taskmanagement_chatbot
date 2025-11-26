@@ -89,10 +89,13 @@ QUERY GUIDELINES:
 - For overdue tasks: WHERE due_date < CURDATE() AND status != 'completed'
 - Use aggregation (COUNT, SUM with CASE) for statistics
 - Always include helpful columns like names, dates, and statuses
+- For user name searches, use SOUNDEX to match phonetically similar names: WHERE SOUNDEX(u.name) = SOUNDEX('search_term')
+- For project/task text searches, use LIKE: WHERE name LIKE '%search_term%'
 
 EXAMPLES:
 - "Show all projects" -> SELECT * FROM projects
 - "Who is working on Website Redesign?" -> SELECT u.name, t.description, t.status FROM tasks t JOIN users u ON t.assigned_to = u.id JOIN projects p ON t.project_id = p.id WHERE p.name LIKE '%Website Redesign%'
+- "What are David's tasks?" -> SELECT t.*, p.name as project FROM tasks t JOIN users u ON t.assigned_to = u.id LEFT JOIN projects p ON t.project_id = p.id WHERE SOUNDEX(u.name) = SOUNDEX('David')
 - "What are overdue tasks?" -> SELECT t.*, u.name as assignee, p.name as project FROM tasks t LEFT JOIN users u ON t.assigned_to = u.id LEFT JOIN projects p ON t.project_id = p.id WHERE t.due_date < CURDATE() AND t.status != 'completed'
 
 IMPORTANT:

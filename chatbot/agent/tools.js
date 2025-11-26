@@ -44,9 +44,10 @@ QUERY GUIDELINES:
 - Always include relevant names, not just IDs, for user-friendly responses
 
 IMPORTANT - NAME MATCHING:
-- ALWAYS use LIKE with wildcards for ANY name search: WHERE name LIKE '%search_term%'
-- NEVER use = for name matching. Example: u.name LIKE '%David%' NOT u.name = 'David'
-- This applies to user names, project names, and any text field searches`,
+- ALWAYS use SOUNDEX for name searches to match phonetically similar names: WHERE SOUNDEX(name) = SOUNDEX('search_term')
+- Example: WHERE SOUNDEX(u.name) = SOUNDEX('David') will match David, Davide, etc.
+- This applies to user names and handles spelling variations/typos
+- For project names or exact text searches, use LIKE: WHERE name LIKE '%search_term%'`,
       parameters: {
         type: "object",
         properties: {

@@ -79,8 +79,8 @@ services:
       context: ./chatbot
       dockerfile: Dockerfile
     container_name: chatbot_service
-    expose:
-      - "4000"
+    ports:
+      - "4000:4000"
     restart: always
     environment:
       PORT: 4000
@@ -126,24 +126,29 @@ services:
         limits:
           memory: 128M
 
-  # Option 2: Avatar UI (comment out chatbot services above if using this)
-  # avatar-ui:
+  # Option 2: Simple Avatar UI (comment out chatbot services above if using this)
+  # Uncomment both simple-avatar-backend and simple-avatar-frontend
+
+  # simple-avatar-backend:
   #   build:
-  #     context: ./avatar-ui
+  #     context: ./simple-avatar-ui/backend
   #     dockerfile: Dockerfile
-  #   container_name: avatar_ui
+  #   container_name: simple_avatar_backend
   #   restart: always
   #   ports:
-  #     - "80:5173"
+  #     - "4700:4700"
   #   environment:
-  #     HOST: 0.0.0.0
-  #     PORT: 5173
-  #     VITE_OPENAPI_HOST: ${VITE_OPENAPI_HOST}
-  #     VITE_OPENAPI_TOKEN: ${VITE_OPENAPI_TOKEN}
-  #     VITE_SERVER_BASE: ${VITE_SERVER_BASE}
-  #     VITE_TASK_API_BASE_URL: http://${DOMAIN:-localhost}:3000
-  #   env_file:
-  #     - ./avatar-ui/.env
+  #     PORT: 4700
+  #     AKOOL_API_HOST: https://openapi.akool.com
+  #     AKOOL_API_TOKEN: ${AKOOL_API_TOKEN}
+  #     DEFAULT_AVATAR_ID: ${AVATAR_ID:-dvp_Alinna_realisticbg_20241224}
+  #     DEFAULT_VOICE_ID: ${VOICE_ID:-21m00Tcm4TlvDq8ikWAM}
+  #     DEFAULT_LANGUAGE: en
+  #     DEFAULT_DURATION: 600
+  #     DEFAULT_MODE_TYPE: 1
+  #     DEFAULT_STREAM_TYPE: trtc
+  #     CHATBOT_API_URL: http://chatbot:4000
+  #     CHATBOT_ENABLED: "false"
   #   networks:
   #     - tasks_net
   #   depends_on:
@@ -151,7 +156,26 @@ services:
   #   deploy:
   #     resources:
   #       limits:
-  #         memory: 256M
+  #         memory: 128M
+
+  # simple-avatar-frontend:
+  #   build:
+  #     context: ./simple-avatar-ui/frontend
+  #     dockerfile: Dockerfile
+  #   container_name: simple_avatar_frontend
+  #   restart: always
+  #   ports:
+  #     - "80:5400"
+  #   environment:
+  #     VITE_BACKEND_URL: http://${DOMAIN:-localhost}:4700
+  #   networks:
+  #     - tasks_net
+  #   depends_on:
+  #     - simple-avatar-backend
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 128M
 
 volumes:
   db_data:

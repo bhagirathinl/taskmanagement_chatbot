@@ -19,7 +19,7 @@ Deploy your Task Management Chatbot on AWS **100% FREE** using the free tier!
 
 Due to 1GB RAM limit, you can run:
 - **Option 1**: Tasks API + Chatbot + Chatbot UI (recommended for demo)
-- **Option 2**: Tasks API + Avatar UI (if you prefer avatar demo)
+- **Option 2**: Tasks API + Simple Avatar UI (if you prefer avatar demo)
 
 **Cannot run both** chatbot and avatar simultaneously on free tier.
 
@@ -110,11 +110,10 @@ OPENAI_API_KEY=sk-proj-your_key_here
 # Disable TTS to save memory
 ENABLE_TTS=false
 
-# For Avatar UI (if you choose Option 2)
-# VITE_OPENAPI_HOST=https://openapi.akool.com
-# VITE_OPENAPI_TOKEN=your_akool_token_here
-# VITE_SERVER_BASE=/streaming/avatar
-# VITE_TASK_API_BASE_URL=http://YOUR_EC2_IP:3000
+# For Simple Avatar UI (if you choose Option 2)
+# AKOOL_API_TOKEN=your_akool_api_token_here
+# AVATAR_ID=dvp_Alinna_realisticbg_20241224
+# VOICE_ID=21m00Tcm4TlvDq8ikWAM
 ```
 
 Save (Ctrl+X, Y, Enter)
@@ -127,13 +126,13 @@ Save (Ctrl+X, Y, Enter)
 docker-compose -f docker-compose.freetier.yml up -d
 ```
 
-**Option 2: Avatar Demo**
+**Option 2: Simple Avatar Demo**
 ```bash
 # Edit docker-compose.freetier.yml
 nano docker-compose.freetier.yml
 
-# Comment out chatbot services (add # at start of lines 44-84)
-# Uncomment avatar-ui service (remove # from lines 87-108)
+# Comment out chatbot services (add # at start of chatbot and chatbot-ui sections)
+# Uncomment simple-avatar-backend and simple-avatar-frontend sections
 # Save and exit
 
 # Deploy avatar version
@@ -161,8 +160,8 @@ Press Ctrl+C to exit logs
 - Try: "Show me all tasks"
 
 **For Avatar Demo**:
-- Open: `http://YOUR_EC2_PUBLIC_IP/streaming/avatar`
-- Configure avatar and start chatting
+- Open: `http://YOUR_EC2_PUBLIC_IP`
+- Avatar will auto-start and you can begin chatting
 
 ---
 
@@ -325,7 +324,7 @@ Before your demo:
 
 ## 🔄 Switch Between Chatbot & Avatar
 
-### Switch to Avatar:
+### Switch to Simple Avatar:
 ```bash
 cd ~/taskmanagement_chatbot
 
@@ -334,8 +333,8 @@ docker-compose -f docker-compose.freetier.yml down
 
 # Edit config
 nano docker-compose.freetier.yml
-# Comment chatbot services (lines 44-84)
-# Uncomment avatar-ui (lines 87-108)
+# Comment out chatbot and chatbot-ui sections
+# Uncomment simple-avatar-backend and simple-avatar-frontend sections
 
 # Start avatar version
 docker-compose -f docker-compose.freetier.yml up -d
@@ -343,10 +342,10 @@ docker-compose -f docker-compose.freetier.yml up -d
 
 ### Switch Back to Chatbot:
 ```bash
-# Reverse the above steps
+cd ~/taskmanagement_chatbot
 docker-compose -f docker-compose.freetier.yml down
 nano docker-compose.freetier.yml
-# Uncomment chatbot, comment avatar
+# Comment simple-avatar sections, uncomment chatbot sections
 docker-compose -f docker-compose.freetier.yml up -d
 ```
 
@@ -400,7 +399,7 @@ You now have a **FREE** demo running on AWS!
 
 **Share your demo**:
 - Chatbot: `http://YOUR_EC2_IP`
-- Avatar: `http://YOUR_EC2_IP/streaming/avatar`
+- Avatar: `http://YOUR_EC2_IP` (when running simple-avatar config)
 
 **Demo Tips**:
 - Test queries: "Show all tasks", "What are overdue tasks?", "Show task 1"
