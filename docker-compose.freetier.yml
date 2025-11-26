@@ -1,5 +1,3 @@
-version: '3.8'
-
 # AWS Free Tier Optimized Configuration
 # For t2.micro/t3.micro (1 vCPU, 1 GB RAM)
 # This runs essential services only to fit in free tier limits
@@ -21,13 +19,11 @@ services:
       - ./db-init:/docker-entrypoint-initdb.d
     networks:
       - tasks_net
-    # Memory optimization for MySQL
+    # Memory optimization for MySQL 8.0
     command: >
       --max_connections=20
       --innodb_buffer_pool_size=128M
-      --innodb_log_file_size=32M
-      --query_cache_size=0
-      --query_cache_type=0
+      --innodb_redo_log_capacity=32M
       --performance_schema=OFF
     deploy:
       resources:
