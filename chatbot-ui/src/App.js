@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import RealtimeVoiceChat from './components/RealtimeVoiceChat';
-import SimpleAvatar from './components/SimpleAvatar';
+import EmbeddedAvatar from './components/EmbeddedAvatar';
 import './App.css';
 
 function App() {
@@ -160,8 +160,8 @@ function App() {
 
         {/* Avatar Tab */}
         {activeTab === 'avatar' && (
-          <div className="tab-content">
-            <SimpleAvatar />
+          <div className="tab-content avatar-tab">
+            <EmbeddedAvatar />
           </div>
         )}
       </main>

@@ -107,6 +107,7 @@ services:
       dockerfile: Dockerfile
       args:
         REACT_APP_CHATBOT_API_URL: https://${DOMAIN:-localhost}
+        REACT_APP_AVATAR_BACKEND_URL: https://${DOMAIN:-localhost}/avatar
     container_name: chatbot_ui
     restart: always
     ports:
@@ -120,56 +121,35 @@ services:
         limits:
           memory: 64M
 
-  # Option 2: Simple Avatar UI (comment out chatbot services above if using this)
-  # Uncomment both simple-avatar-backend and simple-avatar-frontend
-
-  # simple-avatar-backend:
-  #   build:
-  #     context: ./simple-avatar-ui/backend
-  #     dockerfile: Dockerfile
-  #   container_name: simple_avatar_backend
-  #   restart: always
-  #   ports:
-  #     - "4700:4700"
-  #   environment:
-  #     PORT: 4700
-  #     AKOOL_API_HOST: https://openapi.akool.com
-  #     AKOOL_API_TOKEN: ${AKOOL_API_TOKEN}
-  #     DEFAULT_AVATAR_ID: ${AVATAR_ID:-dvp_Alinna_realisticbg_20241224}
-  #     DEFAULT_VOICE_ID: ${VOICE_ID:-21m00Tcm4TlvDq8ikWAM}
-  #     DEFAULT_LANGUAGE: en
-  #     DEFAULT_DURATION: 600
-  #     DEFAULT_MODE_TYPE: 1
-  #     DEFAULT_STREAM_TYPE: trtc
-  #     CHATBOT_API_URL: http://chatbot:4000
-  #     CHATBOT_ENABLED: "false"
-  #   networks:
-  #     - tasks_net
-  #   depends_on:
-  #     - app
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         memory: 128M
-
-  # simple-avatar-frontend:
-  #   build:
-  #     context: ./simple-avatar-ui/frontend
-  #     dockerfile: Dockerfile
-  #   container_name: simple_avatar_frontend
-  #   restart: always
-  #   ports:
-  #     - "80:5400"
-  #   environment:
-  #     VITE_BACKEND_URL: http://${DOMAIN:-localhost}:4700
-  #   networks:
-  #     - tasks_net
-  #   depends_on:
-  #     - simple-avatar-backend
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         memory: 128M
+  # Simple Avatar Backend - provides avatar session management
+  simple-avatar-backend:
+    build:
+      context: ./simple-avatar-ui/backend
+      dockerfile: Dockerfile
+    container_name: simple_avatar_backend
+    restart: always
+    ports:
+      - "4700:4700"
+    environment:
+      PORT: 4700
+      AKOOL_API_HOST: https://openapi.akool.com
+      AKOOL_API_TOKEN: ${AKOOL_API_TOKEN}
+      DEFAULT_AVATAR_ID: ${AVATAR_ID:-dvp_Alinna_realisticbg_20241224}
+      DEFAULT_VOICE_ID: ${VOICE_ID:-21m00Tcm4TlvDq8ikWAM}
+      DEFAULT_LANGUAGE: en
+      DEFAULT_DURATION: 600
+      DEFAULT_MODE_TYPE: 1
+      DEFAULT_STREAM_TYPE: trtc
+      CHATBOT_API_URL: http://chatbot:4000
+      CHATBOT_ENABLED: "true"
+    networks:
+      - tasks_net
+    depends_on:
+      - chatbot
+    deploy:
+      resources:
+        limits:
+          memory: 128M
 
 volumes:
   db_data:

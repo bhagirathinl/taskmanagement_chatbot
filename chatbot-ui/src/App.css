@@ -310,3 +310,11 @@
 .chat-container::-webkit-scrollbar-thumb:hover {
   background: #a0aec0;
 }
+
+/* Avatar Tab */
+.avatar-tab {
+  background: #1a1a2e;
+  border-radius: 16px;
+  min-height: calc(100vh - 240px);
+  overflow: hidden;
+}
